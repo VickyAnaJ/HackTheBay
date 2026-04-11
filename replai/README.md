@@ -2,92 +2,93 @@
 
 **Practice real conversations before they matter.**
 
-ReplAI is a real-time, AI-powered conversation simulator that helps users improve communication skills through realistic roleplay scenarios. It analyzes voice and body language while providing structured feedback, enabling users to train for high-stakes situations like interviews, negotiations, and client interactions.
-
 ---
 
 ## Overview
 
-ReplAI simulates real-world conversations by combining natural language processing, computer vision, and real-time audio analysis into a single interactive experience.
+ReplAI is a real-time, AI-powered conversation simulator designed to help users improve communication skills in high-stakes scenarios such as job interviews, salary negotiations, and client interactions.
 
-Users engage in conversations with an AI character while the system continuously evaluates their performance based on verbal and non-verbal cues. After each session, users receive detailed feedback and a confidence score to guide improvement.
+Unlike traditional chatbots, ReplAI provides a fully interactive experience by combining **natural language processing, computer vision, and real-time audio analysis**. Users engage in live conversations with an AI character while the system continuously evaluates both **what they say** and **how they say it**.
 
----
+The platform analyzes:
+- Verbal communication (speech rate, filler words, pauses)
+- Non-verbal cues (eye contact, posture, movement)
+- Contextual understanding of the conversation
 
-## Features
-
-- **AI Roleplay Simulation**  
-  Engage in dynamic conversations with AI-driven characters across multiple scenarios.
-
-- **Real-Time Voice Analysis**  
-  Measures speech rate, filler words, pauses, and vocal energy.
-
-- **Body Language Tracking**  
-  Uses facial landmark detection to analyze eye contact, posture, and movement.
-
-- **Performance Scoring**  
-  Generates a real-time confidence score based on combined voice and body metrics.
-
-- **Structured Feedback**  
-  Provides actionable insights on communication style and effectiveness.
-
-- **Legal Conflict Detection**  
-  Extracts entities from conversations and identifies potential conflicts using fuzzy matching and relationship mapping.
-
-- **Browser-Based Execution**  
-  Runs entirely in the browser with minimal setup.
+At the end of each session, users receive structured feedback and a confidence score, allowing them to iteratively improve their performance.
 
 ---
 
 ## Architecture
 
-ReplAI is designed as a client-first application with a lightweight serverless component for secure token generation.
+ReplAI follows a **client-first, real-time architecture**, where the majority of processing occurs directly in the browser to minimize latency and eliminate setup complexity.
 
-- **Frontend:** React with TypeScript  
-- **State Management:** Centralized orchestrator handling session lifecycle and AI interactions  
-- **Voice Processing:** WebRTC (LiveKit) + Web Speech API  
-- **Computer Vision:** MediaPipe Face Mesh  
-- **AI Integration:** Google Gemini API for conversation, feedback, and entity extraction  
-- **Conflict Engine:** Custom fuzzy matching system (Levenshtein + Jaccard similarity)
+### Core Design Principles
+- Real-time feedback loop
+- Multi-modal data processing (voice, vision, text)
+- Minimal backend dependency
+- Single orchestrator for state and control flow
 
-The system processes voice, vision, and language inputs simultaneously to deliver real-time feedback.
+### System Flow
+
+1. **User Input**
+   - Microphone captures speech (WebRTC)
+   - Webcam captures facial data (MediaPipe)
+
+2. **Processing Layer**
+   - Speech is transcribed via Web Speech API
+   - Body metrics are computed from facial landmarks
+   - Voice metrics are calculated in real time
+
+3. **AI Interaction**
+   - Conversation context is sent to Google Gemini API
+   - AI generates roleplay responses and feedback
+
+4. **Output Layer**
+   - AI responds via text + speech synthesis
+   - Metrics are updated continuously
+   - Confidence score is computed dynamically
+
+5. **Post-Processing**
+   - Structured feedback is generated
+   - (Optional) Legal entity extraction + conflict detection pipeline runs
+
+### Backend Usage
+
+ReplAI uses a **lightweight serverless function** for secure token generation (LiveKit).  
+All other logic, including AI interaction and scoring, runs on the client.
 
 ---
 
 ## Tech Stack
 
-- **Languages:** TypeScript, JavaScript  
-- **Frameworks & Libraries:** React, Tailwind CSS, Three.js  
-- **AI & APIs:** Google Gemini API  
-- **Audio:** LiveKit (WebRTC), Web Speech API, SpeechSynthesis  
-- **Vision:** MediaPipe Face Mesh  
-- **Algorithms:** Fuzzy matching, real-time scoring  
+### Languages
+- TypeScript  
+- JavaScript  
+
+### Frontend
+- React  
+- Tailwind CSS  
+- Three.js (for interactive UI elements)
+
+### AI & APIs
+- Google Gemini API (conversation, feedback, entity extraction)
+
+### Voice & Audio
+- WebRTC (via LiveKit)  
+- Web Speech API (speech-to-text)  
+- SpeechSynthesis API (text-to-speech)  
+
+### Computer Vision
+- MediaPipe Face Mesh (facial tracking, posture, eye contact)
+
+### Core Systems
+- Real-time scoring engine (confidence metrics)  
+- Fuzzy matching (Levenshtein distance, Jaccard similarity)  
+- Legal conflict detection pipeline  
+
+### Platform
+- Fully browser-based application  
+- Serverless function for token generation  
 
 ---
-
-## Challenges
-
-- Synchronizing real-time audio, video, and AI responses  
-- Handling speech recognition edge cases and echo filtering  
-- Ensuring stable performance metrics during live interaction  
-- Managing latency across multiple real-time systems  
-
----
-
-## Future Work
-
-- Improve tracking accuracy and scoring reliability  
-- Add configurable AI personalities (character conditioning)  
-- Introduce session memory and adaptive feedback  
-- Expand legal conflict detection with larger datasets  
-- Add backend support for persistence and analytics  
-
----
-
-## Getting Started
-
-```bash
-git clone https://github.com/your-username/replai.git
-cd replai
-npm install
-npm run dev
