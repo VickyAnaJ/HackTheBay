@@ -250,9 +250,7 @@ export function useLiveKitVoice() {
     mutedRef.current = true;   // Belt-and-suspenders: also mute
     recognitionRef.current?.stop();
     roomRef.current?.disconnect();
-    if (audioContextRef.current?.state !== "closed") {
-      audioContextRef.current?.close().catch(() => {});
-    }
+    audioContextRef.current?.close();
     setIsConnected(false);
   }, []);
 
@@ -284,9 +282,7 @@ export function useLiveKitVoice() {
     return () => {
       recognitionRef.current?.stop();
       roomRef.current?.disconnect();
-      if (audioContextRef.current?.state !== "closed") {
-        audioContextRef.current?.close().catch(() => {});
-      }
+      audioContextRef.current?.close();
     };
   }, []);
 
