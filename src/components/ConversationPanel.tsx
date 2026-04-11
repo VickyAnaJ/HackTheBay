@@ -22,7 +22,7 @@ export default function ConversationPanel({
   }, [messages, interimText]);
 
   return (
-    <div className="flex flex-col h-full p-4">
+    <div className="flex flex-col p-4">
       {/* Messages */}
       {messages.map((msg) => (
         <div
