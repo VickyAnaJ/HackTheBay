@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+:root {
+  --bg-base: #0a0e1a;
+  --bg-surface: #111827;
+  --bg-raised: #1a1e2e;
+  --text-primary: #e0e0e0;
+  --text-secondary: #9e9e9e;
+  --border: #2a2e3e;
+  --good: #00e676;
+  --warning: #ffd600;
+  --bad: #ff1744;
+  --accent: #7c4dff;
+  --accent-glow: rgba(124, 77, 255, 0.3);
+}
+
+@theme inline {
+  --color-bg-base: var(--bg-base);
+  --color-bg-surface: var(--bg-surface);
+  --color-bg-raised: var(--bg-raised);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border: var(--border);
+  --color-good: var(--good);
+  --color-warning: var(--warning);
+  --color-bad: var(--bad);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--bg-base);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* Glass morphism for panels over 3D background */
+.glass-panel {
+  background: rgba(10, 14, 26, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.glass-surface {
+  background: rgba(17, 24, 39, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* ---- ACCESSIBILITY: Focus rings (Priority 1) ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(124, 77, 255, 0.2);
+}
+
+/* ---- ACCESSIBILITY: Reduced motion (Priority 1) ---- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ---- INTERACTION: Pressed/active states (Priority 2) ---- */
+button:active:not(:disabled) {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+/* ---- ANIMATION: Metric bar transitions (Priority 7) ---- */
+.metric-bar {
+  transition: width 0.3s ease-out, background-color 0.2s ease;
+}
+
+/* ---- ANIMATION: Annotation fade-in (Priority 7) ---- */
+.annotation {
+  animation: annotationFade 0.25s ease-out;
+}
+
+@keyframes annotationFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---- ANIMATION: Confidence score pulse (Priority 7) ---- */
+.score-pulse {
+  animation: pulse 0.4s ease-out;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Confidence score glow */
+.score-glow-good {
+  text-shadow: 0 0 20px rgba(0, 230, 118, 0.4);
+}
+.score-glow-warning {
+  text-shadow: 0 0 20px rgba(255, 214, 0, 0.4);
+}
+.score-glow-bad {
+  text-shadow: 0 0 20px rgba(255, 23, 68, 0.4);
+}
+
+/* ---- SCROLLBAR ---- */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--bg-base);
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 2px;
+}
+
+/* ---- ANIMATION: Scenario card (Priority 7) ---- */
+.scenario-card {
+  transition: border-color 0.2s ease-out, background-color 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.15s ease-out;
+}
+.scenario-card:hover {
+  box-shadow: 0 0 24px var(--accent-glow);
+  transform: translateY(-2px);
+}
+
+/* ---- ANIMATION: Stagger for scenario cards (Priority 7) ---- */
+.stagger-1 { animation-delay: 0ms; }
+.stagger-2 { animation-delay: 50ms; }
+.stagger-3 { animation-delay: 100ms; }
+.stagger-4 { animation-delay: 150ms; }
+.stagger-5 { animation-delay: 200ms; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.35s ease-out both;
+}
+
+/* ---- STATUS: Pulsing dot ---- */
+.status-dot {
+  animation: statusPulse 2s ease-in-out infinite;
+}
+
+@keyframes statusPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ---- ANIMATION: Typing dots (Priority 7) ---- */
+@keyframes typingBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.typing-dot {
+  animation: typingBounce 0.6s ease-in-out infinite;
+}
+
+/* ---- ANIMATION: Score card sections reveal (Priority 7) ---- */
+@keyframes slideReveal {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-1 { animation: slideReveal 0.3s ease-out 0ms both; }
+.reveal-2 { animation: slideReveal 0.3s ease-out 100ms both; }
+.reveal-3 { animation: slideReveal 0.3s ease-out 200ms both; }
+.reveal-4 { animation: slideReveal 0.3s ease-out 300ms both; }
+.reveal-5 { animation: slideReveal 0.3s ease-out 400ms both; }
+.reveal-6 { animation: slideReveal 0.3s ease-out 500ms both; }
+.reveal-7 { animation: slideReveal 0.3s ease-out 600ms both; }
+.reveal-8 { animation: slideReveal 0.3s ease-out 700ms both; }
+.reveal-9 { animation: slideReveal 0.3s ease-out 800ms both; }
+.reveal-10 { animation: slideReveal 0.3s ease-out 900ms both; }
