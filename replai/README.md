@@ -1,94 +1,263 @@
-# ReplAI
+# REPLAI
 
-**Practice real conversations before they matter.**
-
----
-
-## Overview
-
-ReplAI is a real-time, AI-powered conversation simulator designed to help users improve communication skills in high-stakes scenarios such as job interviews, salary negotiations, and client interactions.
-
-Unlike traditional chatbots, ReplAI provides a fully interactive experience by combining **natural language processing, computer vision, and real-time audio analysis**. Users engage in live conversations with an AI character while the system continuously evaluates both **what they say** and **how they say it**.
-
-The platform analyzes:
-- Verbal communication (speech rate, filler words, pauses)
-- Non-verbal cues (eye contact, posture, movement)
-- Contextual understanding of the conversation
-
-At the end of each session, users receive structured feedback and a confidence score, allowing them to iteratively improve their performance.
+> AI-powered conversation practice with real-time body language + voice analysis.  
+> Built for **Hack the Bay 2026** at USF Tampa.
 
 ---
 
-## Architecture
+## What is REPLAI?
 
-ReplAI follows a **client-first, real-time architecture**, where the majority of processing occurs directly in the browser to minimize latency and eliminate setup complexity.
+REPLAI drops you into high-stakes conversations — salary negotiations, job interviews, landlord disputes, HR complaints, legal client intakes — and makes you practice them. An AI opponent role-plays the other party while your webcam and microphone track how you're actually coming across: eye contact, fidgeting, posture, speech rate, filler words, energy. After each round, you get a full scorecard breaking down what went well and where you fell apart.
 
-### Core Design Principles
-- Real-time feedback loop
-- Multi-modal data processing (voice, vision, text)
-- Minimal backend dependency
-- Single orchestrator for state and control flow
+Zero backend servers. Runs entirely in the browser.
 
-### System Flow
+---
 
-1. **User Input**
-   - Microphone captures speech (WebRTC)
-   - Webcam captures facial data (MediaPipe)
+## Features
 
-2. **Processing Layer**
-   - Speech is transcribed via Web Speech API
-   - Body metrics are computed from facial landmarks
-   - Voice metrics are calculated in real time
-
-3. **AI Interaction**
-   - Conversation context is sent to Google Gemini API
-   - AI generates roleplay responses and feedback
-
-4. **Output Layer**
-   - AI responds via text + speech synthesis
-   - Metrics are updated continuously
-   - Confidence score is computed dynamically
-
-5. **Post-Processing**
-   - Structured feedback is generated
-   - (Optional) Legal entity extraction + conflict detection pipeline runs
-
-### Backend Usage
-
-ReplAI uses a **lightweight serverless function** for secure token generation (LiveKit).  
-All other logic, including AI interaction and scoring, runs on the client.
+- **5 Conversation Scenarios** — Salary negotiation, job interview, landlord confrontation, harassment reporting, legal client intake
+- **3 Difficulty Presets per Scenario** — Easy / Normal / Hard with distinct AI personality modifiers
+- **Real-time Body Tracking** — MediaPipe Face Mesh for eye contact %, fidget rate, and posture score
+- **Real-time Voice Analysis** — Speech rate, filler word detection, audio energy via LiveKit WebRTC
+- **Confidence Score** — Composite 0–100 score (eye contact 30%, fidget 20%, posture 15%, fillers 15%, energy 10%, pace 10%)
+- **AI Coaching Annotations** — Fire-and-forget Gemini calls surface tips on the video feed mid-conversation
+- **End-of-Round Scorecard** — Structured JSON feedback: strongest/weakest moments, emotional arc, improvement areas
+- **Legal Conflict Detection** *(Scenario 5 only)* — Gemini extracts entities from conversation, runs fuzzy matching against a mock law firm database, and flags High/Medium/Low risk conflicts
 
 ---
 
 ## Tech Stack
 
-### Languages
-- TypeScript  
-- JavaScript  
-
-### Frontend
-- React  
-- Tailwind CSS  
-- Three.js (for interactive UI elements)
-
-### AI & APIs
-- Google Gemini API (conversation, feedback, entity extraction)
-
-### Voice & Audio
-- WebRTC (via LiveKit)  
-- Web Speech API (speech-to-text)  
-- SpeechSynthesis API (text-to-speech)  
-
-### Computer Vision
-- MediaPipe Face Mesh (facial tracking, posture, eye contact)
-
-### Core Systems
-- Real-time scoring engine (confidence metrics)  
-- Fuzzy matching (Levenshtein distance, Jaccard similarity)  
-- Legal conflict detection pipeline  
-
-### Platform
-- Fully browser-based application  
-- Serverless function for token generation  
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 16 (App Router) + React 19 + TypeScript |
+| Styling | Tailwind CSS 4 |
+| 3D Background | Three.js + React Three Fiber |
+| AI | Google Gemini 2.5 Flash (REST) |
+| Voice / Echo Cancellation | LiveKit WebRTC 2.18 |
+| Speech-to-Text | Web Speech API (Chrome built-in) |
+| Text-to-Speech | Browser SpeechSynthesis |
+| Body Tracking | MediaPipe Face Mesh 0.10 |
+| Conflict Engine | Custom TypeScript — Levenshtein + Jaccard fuzzy matching |
 
 ---
+
+## Architecture
+
+REPLAI is a single-orchestrator design. `page.tsx` owns all state, all hooks, and all API calls. Nothing else touches Gemini or LiveKit directly.
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│                        BROWSER (Chrome)                          │
+│                                                                  │
+│  ┌─────────────────────────────────────────────────────────┐    │
+│  │                  page.tsx (Orchestrator)                 │    │
+│  │   selecting → character-select → countdown              │    │
+│  │              → active → reviewing                       │    │
+│  └────┬──────────┬──────────┬──────────┬───────────────────┘    │
+│       │          │          │          │                         │
+│  ┌────▼────┐ ┌──▼───┐ ┌───▼────┐ ┌──▼────────────┐            │
+│  │useBody  │ │useLK │ │gemini  │ │conflictCheck  │            │
+│  │Tracking │ │Voice │ │.ts     │ │(legal only)   │            │
+│  └────┬────┘ └──┬───┘ └───┬────┘ └───┬───────────┘            │
+│       │         │         │          │                          │
+│  MediaPipe  LiveKit    Browser    firmDatabase                  │
+│  Face Mesh  WebRTC     Speech     fuzzy engine                  │
+│  (GPU)      + Mic      Synthesis                                │
+│                                                                  │
+└──────────────────────────────┬───────────────────────────────────┘
+                               │
+                      ┌────────▼────────┐
+                      │  Gemini 2.5     │
+                      │  Flash API      │
+                      └─────────────────┘
+```
+
+### Conversation Turn Pipeline
+
+```
+User speaks → LiveKit mic (echo-cancelled) → Web Speech API
+    │
+    ▼
+Silence detected (2s) → handleUserFinishedSpeaking()
+    │
+    ├── Echo filter: discard if >30% AI words in user text
+    ├── Mute mic
+    ├── [Background] Coaching annotation (Gemini, fire-and-forget)
+    │
+    ▼
+Gemini 2.5 Flash → AI response text
+    │
+    ├── [Legal only] Entity extraction → conflict check → video overlay
+    │
+    ▼
+speak() → Browser SpeechSynthesis (sentence-by-sentence)
+    │
+    ▼
+Post-speech: 300ms → unmute mic → clear turn
+```
+
+### Metrics Pipeline
+
+Every 500ms, body + voice metrics are collected and fed into `computeConfidence()`:
+
+| Signal | Weight | Source |
+|--------|--------|--------|
+| Eye contact % | 30% | MediaPipe iris deviation < 15% |
+| Fidget rate (inverted) | 20% | Nose + jaw variance with dead zones |
+| Posture score | 15% | Ear-to-ear Y delta + chin-forehead distance |
+| Filler words (inverted) | 15% | 9 patterns: um, uh, like, you know… |
+| Audio energy | 10% | RMS from LiveKit AudioContext |
+| Speech pace | 10% | 15s sliding window, optimal 70–180 wpm |
+
+---
+
+## Project Structure
+
+```
+src/
+├── app/
+│   ├── api/livekit-token/route.ts   # LiveKit JWT generation
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx                     # Orchestrator — all state + hooks + API calls
+├── components/
+│   ├── Background3D.tsx             # Three.js orbs + confidence glow ring
+│   ├── CharacterSelect.tsx          # Difficulty presets + context input
+│   ├── ConversationPanel.tsx        # Chat bubbles + typing indicator
+│   ├── MetricsPanel.tsx             # Live metric bars
+│   ├── ScenarioSelector.tsx         # 5 scenario cards
+│   ├── ScoreCard.tsx                # Round results + conflict report
+│   ├── SessionView.tsx              # Three-panel layout
+│   ├── VideoFeed.tsx                # Webcam + landmark overlay + alerts
+│   └── WarningBar.tsx               # Error notifications
+├── hooks/
+│   ├── useBodyTracking.ts           # MediaPipe Face Mesh + metrics
+│   └── useLiveKitVoice.ts           # LiveKit WebRTC + Web Speech API
+└── lib/
+    ├── characters.ts                # 5 scenarios × 3 difficulty presets
+    ├── gemini.ts                    # All 7 Gemini features
+    ├── scenarios.ts                 # Scenario definitions + system prompts
+    ├── scoring.ts                   # Confidence formula
+    ├── types.ts                     # TypeScript interfaces
+    └── legal/
+        ├── conflictCheck.ts         # Conflict check orchestrator
+        ├── conflictEngine.ts        # Levenshtein + Jaccard fuzzy matching
+        └── firmDatabase.ts          # Mock firm DB (20 clients, 15 matters)
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- **Node.js** 18+
+- **npm** or **yarn**
+- **Google Chrome** (required — Web Speech API is Chrome-only)
+- A **Gemini API key** (free tier works)
+- A **LiveKit Cloud** account (free tier works) — [livekit.io](https://livekit.io)
+
+### Clone & Install
+
+```bash
+git clone https://github.com/your-org/replai.git
+cd replai
+npm install
+```
+
+### Environment Variables
+
+Create a `.env.local` file in the project root:
+
+```env
+# Gemini (required)
+NEXT_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+
+# LiveKit (required)
+LIVEKIT_URL=wss://your-project.livekit.cloud
+LIVEKIT_API_KEY=your_livekit_api_key
+LIVEKIT_API_SECRET=your_livekit_api_secret
+NEXT_PUBLIC_LIVEKIT_URL=wss://your-project.livekit.cloud
+
+# ElevenLabs (optional — deprecated, free tier exhausted)
+NEXT_PUBLIC_ELEVENLABS_API_KEY=
+```
+
+**Getting your keys:**
+- **Gemini** → [aistudio.google.com](https://aistudio.google.com) → Get API Key
+- **LiveKit** → [cloud.livekit.io](https://cloud.livekit.io) → New Project → Settings → Keys
+
+### Run Locally
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in **Chrome**.
+
+> **Note:** Camera and microphone permissions are required for full functionality. The app degrades gracefully if denied — conversation and voice metrics still work without camera access.
+
+### Build for Production
+
+```bash
+npm run build
+npm start
+```
+
+---
+
+## Gemini Integration
+
+REPLAI uses Gemini 2.5 Flash for 7 distinct features:
+
+| # | Feature | Pattern |
+|---|---------|---------|
+| 1 | Multi-turn role-play conversation | `system_instruction` + conversation history |
+| 2 | Character conditioning | `promptModifier` appended to system prompt |
+| 3 | Metrics-aware adaptive AI | Real-time confidence/body metrics injected per turn |
+| 4 | Structured JSON feedback scorecard | `responseMimeType: "application/json"` + schema |
+| 5 | Real-time coaching annotations | Parallel fire-and-forget with structured output |
+| 6 | Legal entity extraction | Structured output extracting parties from transcript |
+| 7 | Conflict risk analysis | Entities fed into local fuzzy matching engine |
+
+---
+
+## Fault Tolerance
+
+| Failure | Recovery |
+|---------|---------|
+| Gemini timeout > 8s | Cached fallback response per scenario |
+| Gemini truncated text | Trim to last complete sentence |
+| Entity extraction JSON truncated | Salvage entity names via regex from partial JSON |
+| AI mic echo (>30% word overlap) | Discard turn, clear transcript |
+| MediaPipe FPS < 5 | Auto-fallback to face-only mode |
+| TTS hang | 30s master timeout + 10s per-sentence timeout |
+| Camera / mic denied | Warning bar, conversation continues |
+| Web Speech API unavailable | Chrome-required block screen |
+
+---
+
+## Scenarios
+
+| Scenario | AI Character | Focus |
+|----------|-------------|-------|
+| Salary Negotiation | Alex Chen — hiring manager, 12yr experience | Assertiveness, anchoring |
+| Job Interview | Jordan Park — VP Engineering, 500+ interviews | Confidence, storytelling |
+| Landlord Confrontation | Pat Moreno — landlord, 20yr, dismissive | De-escalation, documentation |
+| Report Harassment | Morgan Ellis — HR Business Partner, risk-averse | Clarity, composure |
+| Legal Client Intake | Casey Morales — prospective client, nervous | Active listening, conflict detection |
+
+Each scenario has Hard / Normal / Easy difficulty presets that adjust the AI's personality, pushback level, and empathy.
+
+---
+
+## Built At
+
+**Hack the Bay 2026** · USF Tampa · 6-hour build window
+
+---
+
+## License
+
+MIT
