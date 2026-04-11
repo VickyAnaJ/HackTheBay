@@ -74,6 +74,9 @@ function clamp(value: number, min: number, max: number): number {
 const FILLER_WORDS = [
   "um",
   "uh",
+  "umm",
+  "uhh",
+  "hmm",
   "like",
   "you know",
   "basically",
@@ -81,6 +84,14 @@ const FILLER_WORDS = [
   "literally",
   "right",
   "I mean",
+  "I guess",
+  "kind of",
+  "sort of",
+  "you see",
+  "so yeah",
+  "well",
+  "anyway",
+  "obviously",
 ];
 
 export function countFillerWords(text: string): number {
