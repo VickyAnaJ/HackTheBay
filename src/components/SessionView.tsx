@@ -82,7 +82,7 @@ export default function SessionView({
               {String(elapsedSeconds % 60).padStart(2, "0")}
             </span>
           </div>
-          <div className="flex-1 flex items-center justify-center bg-bg-base p-2">
+          <div className="flex-1 flex items-start justify-center bg-bg-base p-2">
             <VideoFeed
               videoRef={bodyTracking.videoRef}
               canvasRef={bodyTracking.canvasRef}
