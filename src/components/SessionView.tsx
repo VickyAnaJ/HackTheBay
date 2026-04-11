@@ -118,28 +118,30 @@ export default function SessionView({
         </div>
 
         {/* Right: Metrics (active) or ScoreCard (review) — independent scroll */}
-        <div className="flex flex-col min-h-0">
-          <div className="px-4 py-2 border-b border-border shrink-0">
-            <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
-              {isReview ? "Round Results" : "Live Metrics"}
-            </h2>
-          </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar min-h-0">
-            {isReview && feedback ? (
-              <ScoreCard feedback={feedback} conflictReport={isLegalScenario ? conflictReport : undefined} />
-            ) : isReview && isLoadingFeedback ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-text-secondary animate-pulse">
-                  Analyzing your performance...
-                </p>
-              </div>
-            ) : (
-              <MetricsPanel
-                bodyMetrics={bodyTracking.metrics}
-                voiceMetrics={voiceMetrics}
-                confidenceScore={confidenceScore}
-              />
-            )}
+        <div className="relative">
+          <div className="absolute inset-0 flex flex-col">
+            <div className="px-4 py-2 border-b border-border shrink-0">
+              <h2 className="text-xs font-semibold text-text-secondary uppercase tracking-wider">
+                {isReview ? "Round Results" : "Live Metrics"}
+              </h2>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              {isReview && feedback ? (
+                <ScoreCard feedback={feedback} conflictReport={isLegalScenario ? conflictReport : undefined} />
+              ) : isReview && isLoadingFeedback ? (
+                <div className="flex items-center justify-center h-full">
+                  <p className="text-text-secondary animate-pulse">
+                    Analyzing your performance...
+                  </p>
+                </div>
+              ) : (
+                <MetricsPanel
+                  bodyMetrics={bodyTracking.metrics}
+                  voiceMetrics={voiceMetrics}
+                  confidenceScore={confidenceScore}
+                />
+              )}
+            </div>
           </div>
         </div>
       </div>
