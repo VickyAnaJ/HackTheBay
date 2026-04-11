@@ -425,6 +425,21 @@ export default function Home() {
     if (jobContext && scenario!.id === "interview") {
       feedbackPrompt += `\n\nJOB CONTEXT: The candidate was interviewing for: ${jobContext}.`;
     }
+    if (scenario!.id === "legal") {
+      const conflictCount = conflictReport?.results.length || 0;
+      const entitiesFound = conflictReport?.entitiesChecked || 0;
+      feedbackPrompt += `\n\nLEGAL INTAKE EVALUATION: The user is an ATTORNEY conducting a client intake. Evaluate their performance AS A LAWYER gathering information for a conflict check.
+
+REFRAME ALL FEEDBACK FOR LEGAL CONTEXT:
+- body_feedback: Frame as client trust — "maintaining eye contact builds client confidence to share sensitive details" or "fidgeting may make the client hesitant to disclose"
+- voice_feedback: Frame as professional presence — "steady speech pace projects competence" or "filler words can undermine client confidence in your expertise"
+- content_feedback: Focus on INTAKE QUALITY — Did they ask probing follow-up questions? Did they ask about ALL parties involved? Did they ask about opposing counsel, related entities, family connections? Did they miss obvious follow-ups?
+- strategy_analysis: Assess their QUESTIONING TECHNIQUE — open-ended vs closed questions, how effectively they drew out entity names for conflict detection
+- strongest_moment / weakest_moment: Reference specific questions they asked (or failed to ask) that surfaced (or missed) key entities
+- tip_for_next_round: Give a specific intake technique tip
+
+CONFLICT CHECK RESULTS: ${conflictCount} conflicts detected from ${entitiesFound} entities extracted. Factor this into the assessment — did the attorney's questioning uncover enough information?`;
+    }
 
     getRoundFeedback(feedbackPrompt, fullTranscript, metricsTimeline)
       .then((fb) => {
